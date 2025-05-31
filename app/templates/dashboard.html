@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" class="dark-theme">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigil ASM • Attack Surface Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --accent-primary: #00ff88;
+            --accent-secondary: #2196F3;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --critical: #ff4444;
+            --warning: #ffc107;
+            --safe: #00ff88;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        .scan-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid #2a2a2a;
+        }
+
+        .scan-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+        }
+
+        .scan-input {
+            background: var(--bg-primary);
+            border: 1px solid #333;
+            padding: 1rem;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .scan-button {
+            background: var(--accent-primary);
+            color: #000;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .asset-list {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        }
+
+        .asset-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #2a2a2a;
+            position: relative;
+        }
+
+        .risk-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .critical { background: rgba(255, 68, 68, 0.2); color: var(--critical); }
+        .warning { background: rgba(255, 193, 7, 0.2); color: var(--warning); }
+        .safe { background: rgba(0, 255, 136, 0.2); color: var(--safe); }
+
+        .vuln-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .vuln-item {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+        }
+
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Vigil ASM</h1>
+            <nav>
+                <button class="scan-button">New Scan</button>
+            </nav>
+        </header>
+
+        <div class="metrics-bar">
+            <div class="metric-card">
+                <div class="metric-label">Total Assets</div>
+                <div class="metric-value">{{ assets|length }}</div>
+                <div class="metric-trend safe">+12%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Critical Risks</div>
+                <div class="metric-value critical">23</div>
+                <div class="metric-trend warning">-5%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Active Threats</div>
+                <div class="metric-value warning">8</div>
+                <div class="metric-trend critical">+3%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Response Time</div>
+                <div class="metric-value">328ms</div>
+                <div class="metric-trend safe">-22%</div>
+            </div>
+        </div>
+
+        <div class="scan-container">
+            <form class="scan-form" action="{{ url_for('assets.submit_asset') }}" method="POST">
+                <input 
+                    type="text" 
+                    name="domain"
+                    class="scan-input"
+                    placeholder="Enter domain, IP, or CIDR range..."
+                    required
+                >
+                <button type="submit" class="scan-button">
+                    Start Surface Scan
+                </button>
+            </form>
+        </div>
+
+        <div class="asset-list">
+            {% for asset in assets %}
+            <div class="asset-card">
+                <div class="risk-badge safe">New</div>
+                <h3>{{ asset.domain }}</h3>
+                <div class="asset-meta">
+                    <span>Submitted: {{ asset.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                </div>
+                <ul class="vuln-list">
+                    <li class="vuln-item safe">Pending scan...</li>
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
