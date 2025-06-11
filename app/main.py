@@ -1,7 +1,7 @@
 from flask import Flask
-from routes.assets import assets_bp
-from routes.scan_results import results_bp
-from models.db import init_db  # or database if you renamed it
+from app.routes.assets import assets_bp
+from app.routes.scan_results import results_bp
+from app.models.db import init_db  # or database if you renamed it
 import os
 
 def create_app():

@@ -16,7 +16,7 @@ RUN curl -s https://api.github.com/repos/projectdiscovery/subfinder/releases/lat
     unzip subfinder.zip -d /usr/local/bin/ && rm subfinder.zip
 
 # Set working directory
-WORKDIR /app
+WORKDIR /usr/src/app
 
 # Copy requirements and install
 COPY requirements.txt .
