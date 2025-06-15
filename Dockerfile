@@ -23,13 +23,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app files
-COPY app/ .
+COPY . .
 
 # Set environment variable to make Flask listen on 0.0.0.0
-ENV FLASK_APP=main.py
+ENV FLASK_APP=app.main.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_ENV=development
-
+ENV PYTHONPATH=/usr/src/app
 # Expose Flask port
 EXPOSE 5000
 

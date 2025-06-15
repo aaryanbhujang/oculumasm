@@ -1,16 +1,16 @@
 MODULES = {
     "subdomains": {
-        "runner": "app.modules.subdomains.run.run",  # Full dotted path
+        "runner": "app.tasks.subdomain_tasks.scan",  # Full dotted path
         "requires": ["domain"],
         "description": "Subdomain enumeration",
         "is_active": True  # Enable/disable modules dynamically
-    },
-    "port_scan": {
-        "runner": "app.modules.portscan.run.run", 
-        "requires": ["ip", "domain"],
-        "description": "TCP port scanning",
-        "is_active": True
     }
+#     "port_scan": {
+#         "runner": "app.tasks.portscan_tasks.scan", 
+#         "requires": ["ip", "domain"],
+#         "description": "TCP port scanning",
+#         "is_active": True
+#     }
 }
 
 def get_available_modules(input_type: str) -> list:
