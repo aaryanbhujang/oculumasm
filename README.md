@@ -67,7 +67,7 @@ All services are containerized using Docker and orchestrated via `docker-compose
 ### Quick Start
 
 ```bash
-git clone https://github.com/your-org/reconorchestrator.git
-cd reconorchestrator
+git clone https://github.com/aaryanbhujang/pyasm.git
+cd pyasm
 cp .env.example .env
 docker-compose up --build
