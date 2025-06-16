@@ -1,240 +1,1368 @@
 <!DOCTYPE html>
-<html lang="en" class="dark-theme">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vigil ASM • Attack Surface Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>pyASM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #1a1a1a;
-            --accent-primary: #00ff88;
-            --accent-secondary: #2196F3;
-            --text-primary: #ffffff;
-            --text-secondary: #888888;
-            --critical: #ff4444;
-            --warning: #ffc107;
-            --safe: #00ff88;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --secondary: #0d9488;
+            --accent: #8b5cf6;
+            --background: #0a0a0a;
+            --surface: #121212;
+            --card: #1e1e1e;
+            --card-hover: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: rgba(255, 255, 255, 0.08);
+            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
         body {
-            background: var(--bg-primary);
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
         }
 
+        /* Typography */
+        h1, h2, .logo, .modal-title, .section-title {
+            font-weight: 900;
+            letter-spacing: -0.015em;
+        }
+
+        .hero h1, .logo {
+            font-weight: 900;
+        }
+
+        .hero p, .input-group label, .info-label, .timeline-content {
+            font-weight: 300;
+        }
+
+        .card h2, .result-target, .summary-value, .info-value {
+            font-weight: 700;
+        }
+
+        .btn, .result-status, .status-indicator {
+            font-weight: 500;
+        }
+
+        .text-light {
+            font-weight: 300;
+        }
+
+        /* Layout */
         .container {
-            max-width: 1600px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 0 24px;
         }
 
+        /* Header */
         .header {
+            padding: 20px 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 0;
-            margin-bottom: 3rem;
-            border-bottom: 1px solid var(--bg-secondary);
         }
 
-        .scan-container {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 3rem;
-            border: 1px solid #2a2a2a;
+        .logo {
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .scan-form {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 1rem;
-        }
-
-        .scan-input {
-            background: var(--bg-primary);
-            border: 1px solid #333;
-            padding: 1rem;
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            background: linear-gradient(90deg, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .main {
+            padding: 48px 0;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .hero h1 {
+            font-size: 100px;
+            letter-spacing: -0.025em;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 22px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.5;
+            letter-spacing: -0.01em;
+        }
+
+        /* Scan Section */
+        .scan-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 64px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card h2 {
+            font-size: 26px;
+            margin-bottom: 24px;
+            color: var(--primary-light);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card h2::before {
+            content: "";
+            display: block;
+            width: 6px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             color: var(--text-primary);
-            font-size: 1rem;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.3s ease;
         }
 
-        .scan-button {
-            background: var(--accent-primary);
-            color: #000;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-weight: 600;
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .module-selector {
+            margin-bottom: 24px;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .module-item {
+            padding: 14px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 400;
         }
 
-        .asset-list {
-            display: grid;
-            gap: 1rem;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        .module-item.active {
+            background: rgba(37, 99, 235, 0.15);
+            border-color: var(--primary);
+            color: var(--primary-light);
         }
 
-        .asset-card {
-            background: var(--bg-secondary);
+        .module-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .module-item:not(.disabled):hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
             border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid #2a2a2a;
-            position: relative;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .risk-badge {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.25rem 0.75rem;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-bottom: 64px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 36px;
+            color: var(--text-primary);
+            letter-spacing: -0.015em;
+            background: linear-gradient(90deg, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .result-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .result-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            background: var(--card-hover);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .result-target {
+            font-size: 19px;
+            color: var(--text-primary);
+        }
+
+        .result-status {
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
         }
 
-        .critical { background: rgba(255, 68, 68, 0.2); color: var(--critical); }
-        .warning { background: rgba(255, 193, 7, 0.2); color: var(--warning); }
-        .safe { background: rgba(0, 255, 136, 0.2); color: var(--safe); }
-
-        .vuln-list {
-            list-style: none;
-            margin-top: 1rem;
+        .status-running {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
         }
 
-        .vuln-item {
-            padding: 0.5rem;
-            margin: 0.25rem 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
+        .status-completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
         }
 
-        .metrics-bar {
+        .status-failed {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .result-info {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
         }
 
-        .metric-card {
-            background: var(--bg-secondary);
-            padding: 1.5rem;
+        .info-item {
+            text-align: center;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
-            border: 1px solid #2a2a2a;
+            transition: all 0.3s ease;
         }
 
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 600;
-            margin: 0.5rem 0;
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .info-value {
+            font-size: 26px;
+            color: var(--primary-light);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-animated {
+            animation: progress-animation 2s infinite;
+        }
+
+        @keyframes progress-animation {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transform: translateX(400px);
+            animation: slideIn 0.3s ease forwards;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+
+        /* Loading States */
+        .loading-skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 12px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Results Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            overflow-y: auto;
+            padding: 40px 0;
+        }
+
+        .modal.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .modal-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 24px;
+            background: rgba(0,0,0,0.4);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 26px;
+            color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 28px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .result-section {
+            margin-bottom: 36px;
+        }
+
+        .result-section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-section-title::before {
+            content: "";
+            display: block;
+            width: 4px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .results-list {
+            list-style: none;
+        }
+
+        .result-item {
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .result-item:hover {
+            background: rgba(37, 99, 235, 0.1);
+            border-color: var(--primary);
+        }
+
+        .result-item-icon {
+            margin-right: 14px;
+            color: var(--primary-light);
+            width: 24px;
+            text-align: center;
+        }
+
+        .result-item-content {
+            flex: 1;
+            font-weight: 400;
+        }
+
+        .result-item-actions {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            gap: 8px;
+        }
+
+        .result-item:hover .result-item-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+
+        .summary-value {
+            font-size: 36px;
+            color: var(--primary-light);
+            margin-bottom: 8px;
+        }
+
+        .summary-label {
+            font-size: 15px;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+            margin-top: 24px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary);
+            opacity: 0.4;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            padding-left: 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 3px solid var(--card);
+        }
+
+        .timeline-time {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 300;
+        }
+
+        .timeline-content {
+            background: rgba(255,255,255,0.03);
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-weight: 400;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .scan-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 18px;
+            }
+            
+            .section-title {
+                font-size: 28px;
+            }
+            
+            .modules-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .modal-content {
+                margin: 0 20px;
+            }
+            
+            .card h2 {
+                font-size: 22px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>Vigil ASM</h1>
-            <nav>
-                <button class="scan-button">New Scan</button>
-            </nav>
-        </header>
-
-        <div class="metrics-bar">
-            <div class="metric-card">
-                <div class="metric-label">Total Assets</div>
-                <div class="metric-value">{{ assets|length }}</div>
-                <div class="metric-trend safe">+12%</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Critical Risks</div>
-                <div class="metric-value critical">23</div>
-                <div class="metric-trend warning">-5%</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Active Threats</div>
-                <div class="metric-value warning">8</div>
-                <div class="metric-trend critical">+3%</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Response Time</div>
-                <div class="metric-value">328ms</div>
-                <div class="metric-trend safe">-22%</div>
-            </div>
-        </div>
-
-        <div class="scan-container">
-            <form id="scanForm" class="scan-form">
-                <input 
-                    type="text" 
-                    id="targetInput"
-                    class="scan-input"
-                    placeholder="Enter domain, IP, or CIDR range..."
-                    required
-                >
-                <button type="submit" class="scan-button">
-                    Start Surface Scan
-                </button>
-            </form>
-        </div>
-
-        <div class="asset-list">
-            {% for asset in assets %}
-            <div class="asset-card">
-                <div class="risk-badge safe">New</div>
-                <h3>{{ asset.domain }}</h3>
-                <div class="asset-meta">
-                    <span>Submitted: {{ asset.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="logo-text">pyASM</span>
                 </div>
-                <ul class="vuln-list">
-                    <li class="vuln-item safe">Pending scan...</li>
-                </ul>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span id="connectionStatus">Connected</span>
+                </div>
             </div>
-            {% endfor %}
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="hero">
+                <h1>Attack Surface Management</h1>
+                <p>The SMART red teaming solution.</p>
+            </section>
+
+            <section class="scan-section">
+                <div class="card">
+                    <h2>New Scan</h2>
+                    <form id="scanForm">
+                        <div class="input-group">
+                            <label for="target">Target Domain or IP Address</label>
+                            <input 
+                                type="text" 
+                                id="target" 
+                                class="input-field" 
+                                placeholder="example.com or 192.168.1.1"
+                                required
+                            >
+                        </div>
+
+                        <div class="module-selector">
+                            <label>Scan Vectors</label>
+                            <div class="modules-grid">
+                                <div class="module-item active" data-module="subdomains">
+                                    <div>Subdomains</div>
+                                </div>
+                                <div class="module-item disabled" data-module="osint">
+                                    <div>OSINT</div>
+                                </div>
+                                <div class="module-item disabled" data-module="ports">
+                                    <div>Port Scan</div>
+                                </div>
+                                <div class="module-item disabled" data-module="vulns">
+                                    <div>Vulnerabilities</div>
+                                </div>
+                                <div class="module-item disabled" data-module="dirs">
+                                    <div>Directories</div>
+                                </div>
+                                <div class="module-item disabled" data-module="dns">
+                                    <div>DNS Lookup</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn" id="startScanBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 8L16 12L10 16V8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Start Security Scan
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>System Status</h2>
+                    <div class="result-info">
+                        <div class="info-item">
+                            <span class="info-value" id="activeScanCount">0</span>
+                            <div class="info-label">Active Scans</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-value" id="completedScanCount">0</span>
+                            <div class="info-label">Completed</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-value" id="totalFindingsCount">0</span>
+                            <div class="info-label">Total Findings</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="results-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Scan Operations</h2>
+                </div>
+                <div class="results-grid" id="resultsContainer">
+                    <!-- Results will be populated here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Results Modal -->
+    <div class="modal" id="resultsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Scan Results</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Detailed results will be loaded here -->
+            </div>
         </div>
     </div>
 
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
-    document.getElementById('scanForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
+        class SecurityScanner {
+            constructor() {
+                this.activeScans = new Map();
+                this.completedScans = [];
+                this.pollInterval = 2000; // 2 seconds
+                this.init();
+            }
 
-        const targetValue = document.getElementById('targetInput').value.trim();
-        if (!targetValue) {
-            alert('Please enter a target.');
-            return;
-        }
+            init() {
+                this.bindEvents();
+                this.loadExistingScans();
+                this.updateStats();
+            }
 
-        const payload = {
-            target: targetValue
-        };
+            bindEvents() {
+                // Form submission
+                document.getElementById('scanForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.startScan();
+                });
 
-        try {
-            const response = await fetch('/scan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+                // Module selection
+                document.querySelectorAll('.module-item:not(.disabled)').forEach(item => {
+                    item.addEventListener('click', () => {
+                        item.classList.toggle('active');
+                    });
+                });
+
+                // Close modal button
+                document.getElementById('closeModalBtn').addEventListener('click', () => {
+                    document.getElementById('resultsModal').classList.remove('active');
+                });
+            }
+
+            async startScan() {
+                const target = document.getElementById('target').value.trim();
+                const selectedModules = Array.from(document.querySelectorAll('.module-item.active'))
+                    .map(item => item.dataset.module);
+
+                if (!target) {
+                    this.showToast('Please enter a target', 'error');
+                    return;
+                }
+
+                if (selectedModules.length === 0) {
+                    this.showToast('Please select at least one module', 'error');
+                    return;
+                }
+
+                const startBtn = document.getElementById('startScanBtn');
+                startBtn.disabled = true;
+                startBtn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Starting Scan...
+                `;
+
+                try {
+                    const response = await fetch('/scan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            target: target,
+                            modules: selectedModules
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.showToast('Scan started successfully', 'success');
+                        this.addActiveScan(data.scan_id, target, selectedModules);
+                        this.startPolling(data.scan_id);
+                        document.getElementById('target').value = '';
+                    } else {
+                        this.showToast(data.error || 'Failed to start scan', 'error');
+                    }
+                } catch (error) {
+                    this.showToast('Network error: ' + error.message, 'error');
+                } finally {
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 8L16 12L10 16V8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Start Security Scan
+                    `;
+                }
+            }
+
+            addActiveScan(scanId, target, modules) {
+                const scanData = {
+                    id: scanId,
+                    target: target,
+                    modules: modules,
+                    status: 'STARTED',
+                    startTime: new Date(),
+                    findings: 0
+                };
+
+                this.activeScans.set(scanId, scanData);
+                this.renderScan(scanData);
+                this.updateStats();
+            }
+
+            async startPolling(scanId) {
+                const poll = async () => {
+                    if (!this.activeScans.has(scanId)) return;
+
+                    try {
+                        const response = await fetch(`/status/${scanId}`);
+                        const data = await response.json();
+
+                        if (data.status === 'COMPLETED') {
+                            this.completeScan(scanId, data.data);
+                        } else if (data.status === 'FAILED') {
+                            this.failScan(scanId, data.error);
+                        } else {
+                            // Still running, continue polling
+                            setTimeout(poll, this.pollInterval);
+                        }
+                    } catch (error) {
+                        console.error('Polling error:', error);
+                        setTimeout(poll, this.pollInterval * 2); // Back off on error
+                    }
+                };
+
+                setTimeout(poll, this.pollInterval);
+            }
+
+            completeScan(scanId, resultData) {
+                const scanData = this.activeScans.get(scanId);
+                if (!scanData) return;
+
+                scanData.status = 'COMPLETED';
+                scanData.endTime = new Date();
+                scanData.findings = resultData?.subdomains?.length || 0;
+                scanData.resultData = resultData;
+
+                this.activeScans.delete(scanId);
+                this.completedScans.unshift(scanData);
+
+                this.renderScan(scanData);
+                this.updateStats();
+                this.showToast(`Scan completed: ${scanData.findings} findings`, 'success');
+            }
+
+            failScan(scanId, error) {
+                const scanData = this.activeScans.get(scanId);
+                if (!scanData) return;
+
+                scanData.status = 'FAILED';
+                scanData.endTime = new Date();
+                scanData.error = error;
+
+                this.activeScans.delete(scanId);
+                this.completedScans.unshift(scanData);
+
+                this.renderScan(scanData);
+                this.updateStats();
+                this.showToast(`Scan failed: ${error}`, 'error');
+            }
+
+            renderScan(scanData) {
+                const container = document.getElementById('resultsContainer');
+                let scanElement = document.getElementById(`scan-${scanData.id}`);
+
+                if (!scanElement) {
+                    scanElement = document.createElement('div');
+                    scanElement.id = `scan-${scanData.id}`;
+                    scanElement.className = 'result-card';
+                    scanElement.addEventListener('click', () => {
+                        this.showScanDetails(scanData);
+                    });
+                    container.insertBefore(scanElement, container.firstChild);
+                }
+
+                const duration = scanData.endTime 
+                    ? Math.round((scanData.endTime - scanData.startTime) / 1000)
+                    : Math.round((new Date() - scanData.startTime) / 1000);
+
+                const statusClass = {
+                    'STARTED': 'status-running',
+                    'COMPLETED': 'status-completed',
+                    'FAILED': 'status-failed'
+                }[scanData.status] || 'status-running';
+
+                scanElement.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-target">${scanData.target}</div>
+                        <div class="result-status ${statusClass}">${scanData.status}</div>
+                    </div>
+                    <div class="result-info">
+                        <div class="info-item">
+                            <span class="info-value">${scanData.findings || '0'}</span>
+                            <div class="info-label">Findings</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-value">${duration}s</span>
+                            <div class="info-label">Duration</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-value">${scanData.modules.length}</span>
+                            <div class="info-label">Modules</div>
+                        </div>
+                    </div>
+                    ${scanData.status === 'STARTED' ? `
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-animated" style="width: 100%"></div>
+                        </div>
+                    ` : ''}
+                `;
+            }
+
+            async showScanDetails(scanData) {
+                const modal = document.getElementById('resultsModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalBody');
+                
+                modalTitle.textContent = `Scan Results: ${scanData.target}`;
+                
+                // Show loading state
+                modalBody.innerHTML = `
+                    <div class="loading-skeleton" style="height: 300px; border-radius: 12px;"></div>
+                `;
+                
+                modal.classList.add('active');
+                
+                try {
+                    // Fetch detailed results
+                    const response = await fetch(`/scan_results/${scanData.id}`);
+                    const resultData = await response.json();
+                    
+                    // Render detailed results
+                    this.renderDetailedResults(modalBody, scanData, resultData);
+                } catch (error) {
+                    modalBody.innerHTML = `
+                        <div class="result-section">
+                            <h3 class="result-section-title">Error</h3>
+                            <p>Could not load detailed scan results: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+          renderDetailedResults(container, scanData, resultData) {
+    const duration = scanData.endTime 
+        ? Math.round((scanData.endTime - scanData.startTime) / 1000)
+        : Math.round((new Date() - scanData.startTime) / 1000);
+    
+    const startTime = scanData.startTime.toLocaleString();
+    const endTime = scanData.endTime ? scanData.endTime.toLocaleString() : 'N/A';
+    
+    // Create detailed scan information
+    container.innerHTML = `
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-value">${scanData.findings || 0}</div>
+                <div class="summary-label">Total Findings</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">${duration}s</div>
+                <div class="summary-label">Duration</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">${scanData.modules.length}</div>
+                <div class="summary-label">Modules</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">${scanData.status}</div>
+                <div class="summary-label">Status</div>
+            </div>
+        </div>
+        
+        <div class="result-section">
+            <h3 class="result-section-title">Scan Information</h3>
+            <div class="result-info" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                <div class="info-item">
+                    <span class="info-value">${scanData.target}</span>
+                    <div class="info-label">Target</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-value">${startTime}</span>
+                    <div class="info-label">Start Time</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-value">${endTime}</span>
+                    <div class="info-label">End Time</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-value">${scanData.id}</span>
+                    <div class="info-label">Scan ID</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-section">
+            <h3 class="result-section-title">Modules</h3>
+            <ul class="results-list">
+                ${scanData.modules.map(module => `
+                    <li class="result-item">
+                        <div class="result-item-icon">•</div>
+                        <div class="result-item-content">${this.formatModuleName(module)}</div>
+                        <div class="result-item-actions">
+                            <button class="action-btn">View Details</button>
+                        </div>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+        
+        ${resultData.subdomains && resultData.subdomains.length > 0 ? `
+        <div class="result-section">
+            <h3 class="result-section-title">Discovered Subdomains</h3>
+            <div class="subdomain-stats" style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                <div style="color: var(--text-secondary);">
+                    <span style="color: var(--primary-light); font-weight: 700;">${resultData.subdomains.length}</span> subdomains found
+                </div>
+                <div class="search-box" style="position: relative;">
+                    <input type="text" id="subdomainFilter" class="input-field" placeholder="Filter subdomains..." style="padding-left: 38px; width: 260px;">
+                    <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="subdomains-container" style="max-height: 300px; overflow-y: auto; border-radius: 12px; border: 1px solid var(--border);">
+                <ul class="results-list" style="border: none;">
+                    ${resultData.subdomains.map(subdomain => `
+                        <li class="result-item">
+                            <div class="result-item-icon" style="color: var(--success);">✓</div>
+                            <div class="result-item-content">${subdomain}</div>
+                            <div class="result-item-actions">
+                                <button class="action-btn" data-subdomain="${subdomain}">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M8 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V18C2 18.5304 2.21071 19.0391 2.58579 19.4142C2.96086 19.7893 3.46957 20 4 20H16C16.5304 20 17.0391 19.7893 17.4142 19.4142C17.7893 19.0391 18 18.5304 18 18V14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M16 4H20C20.5304 4 21.0391 4.21071 21.4142 4.58579C21.7893 4.96086 22 5.46957 22 6V10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M15 15L22 8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        </div>
+        ` : ''}
+        
+        ${resultData.created_at ? `
+        <div class="result-section">
+            <h3 class="result-section-title">Metadata</h3>
+            <ul class="results-list">
+                <li class="result-item">
+                    <div class="result-item-icon">🆔</div>
+                    <div class="result-item-content">Task ID: ${scanData.id}</div>
+                </li>
+                <li class="result-item">
+                    <div class="result-item-icon">📅</div>
+                    <div class="result-item-content">Created at: ${new Date(resultData.created_at).toLocaleString()}</div>
+                </li>
+                <li class="result-item">
+                    <div class="result-item-icon">🗃️</div>
+                    <div class="result-item-content">Database ID: ${resultData._id}</div>
+                </li>
+            </ul>
+        </div>
+        ` : ''}
+        
+        ${scanData.status === 'FAILED' ? `
+        <div class="result-section">
+            <h3 class="result-section-title">Error Details</h3>
+            <div class="result-item" style="background: rgba(239, 68, 68, 0.1);">
+                <div class="result-item-content" style="color: var(--error);">${scanData.error || 'Unknown error occurred during scan'}</div>
+            </div>
+        </div>
+        ` : ''}
+    `;
+
+    // Add filter functionality
+    const filterInput = container.querySelector('#subdomainFilter');
+    if (filterInput) {
+        filterInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const items = container.querySelectorAll('.subdomains-container .result-item');
+            
+            items.forEach(item => {
+                const subdomain = item.querySelector('.result-item-content').textContent.toLowerCase();
+                if (subdomain.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
             });
+        });
+    }
 
-            const result = await response.json();
-
-            //alert(`✅ Scan started!\n🆔 Scan ID: ${result.scan_id}\n📦 Modules: ${result.modules.join(', ')}`);
-        } catch (error) {
-            console.error('Error starting scan:', error);
-            //alert('❌ Failed to start scan. Please try again.');
-        }
+    // Add copy functionality
+    container.querySelectorAll('.action-btn[data-subdomain]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const subdomain = button.getAttribute('data-subdomain');
+            navigator.clipboard.writeText(subdomain).then(() => {
+                this.showToast(`Copied to clipboard: ${subdomain}`, 'success');
+            });
+        });
     });
+}
+
+formatModuleName(module) {
+    return module.replace(/\b\w/g, l => l.toUpperCase()).replace('Osint', 'OSINT');
+}
+
+            updateStats() {
+                document.getElementById('activeScanCount').textContent = this.activeScans.size;
+                document.getElementById('completedScanCount').textContent = this.completedScans.length;
+                
+                const totalFindings = this.completedScans.reduce((sum, scan) => sum + (scan.findings || 0), 0);
+                document.getElementById('totalFindingsCount').textContent = totalFindings;
+            }
+
+            loadExistingScans() {
+                // This would typically load from the backend
+                // For demo, let's add some sample scans
+                
+            }
+
+            showToast(message, type = 'success') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icon = type === 'success' ? 
+                    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1953 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18457 2.99721 7.13633 4.39828 5.49707C5.79935 3.85782 7.69279 2.71538 9.79619 2.24015C11.8996 1.76491 14.1003 1.98234 16.07 2.86" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M22 4L12 14.01L9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>` :
+                    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 8V12V8ZM12 16H12.01H12ZM22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>`;
+                
+                toast.innerHTML = `
+                    <div class="toast-icon">${icon}</div>
+                    <div>${message}</div>
+                `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 4000);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new SecurityScanner();
+        });
     </script>
 </body>
 </html>
