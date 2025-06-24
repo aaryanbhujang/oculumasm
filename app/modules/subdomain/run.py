@@ -1,40 +1,38 @@
-from . import active, passive
-from .schemas import SubdomainResult
-from typing import List, Optional
-import asyncio
+# app/modules/subdomain/run.py
 
-class SubdomainScanner:
-    def __init__(self, domain: str):
-        self.domain = domain
-        self.found = set()
-
-    async def run(self, scan_type: str = "full") -> SubdomainResult:
-        """Main execution flow"""
-        # Passive always runs
-        self.found.update(await passive.run(self.domain))
-        
-        if scan_type == "full":
-            self.found.update(await active.run(self.domain))
-            
-        return SubdomainResult(
-            domain=self.domain,
-            subdomains=list(self.found),
-            scan_type=scan_type
-        )
-
-# async def run(domain: str) -> SubdomainResult:
-#     """Public interface"""
-#     return await SubdomainScanner(domain).run()
-import asyncio
+from typing import AsyncGenerator, Union
+from app.modules.subdomain.passive.enumerate_passive import pass_enum
+from app.modules.subdomain.active.enumerate_active import act_enum
 from app.modules.subdomain.schemas import SubdomainResult
 
-async def run(domain: str) -> SubdomainResult:
-    """Dummy subdomain scanner for testing Celery with simulated delay"""
-    
-    await asyncio.sleep(15)  # Simulate 5 seconds of work
-    
-    return SubdomainResult(
-        domain=domain,
-        subdomains=[f"test1.{domain}", f"test2.{domain}"],
-        scan_type="full"
-    )
+async def run(domain: str) -> AsyncGenerator[Union[str, dict], None]:
+    """
+    Streams each discovered subdomain and stage markers, all JSON-serializable.
+    Yields:
+      - str: each subdomain as it’s found
+      - dict: {'stage': 'passive-start'}
+      - dict: {'stage': 'active-start'}
+      - dict: {'stage': 'done', 'result': <plain dict>}
+    """
+    result = SubdomainResult(domain=domain, subdomains=[])
+
+    # 1) Passive enumeration: tell client we're starting
+    yield {"stage": "passive-start"}
+
+    # stream each passive subdomain
+    async for sub in pass_enum(domain):      # must be AsyncGenerator[str, None]
+        result.subdomains.append(sub)
+        yield sub
+
+    # 2) Active enumeration
+    yield {"stage": "active-start"}
+
+    async for sub in act_enum(domain):       # must be AsyncGenerator[str, None]
+        result.subdomains.append(sub)
+        yield sub
+
+    # 3) Done: hand back the full result as a plain dict
+    yield {
+        "stage":  "done",
+        "result": result.dict()             # .dict() makes it JSON-serializable
+    }
