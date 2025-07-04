@@ -20,9 +20,12 @@ async def run(domain: str) -> AsyncGenerator[Union[str, dict], None]:
     yield {"stage": "passive-start"}
 
     # stream each passive subdomain
-    async for sub in pass_enum(domain):      # must be AsyncGenerator[str, None]
-        result.subdomains.append(sub)
-        yield sub
+    async for sub in pass_enum(domain):
+        if "@" not in sub:      # must be AsyncGenerator[str, None]
+            result.subdomains.append(sub)
+            yield sub
+        else:
+            yield ""
 
     # 2) Active enumeration
     yield {"stage": "active-start"}
