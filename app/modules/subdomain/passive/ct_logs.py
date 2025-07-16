@@ -1,12 +1,14 @@
 import httpx
 from typing import AsyncGenerator
+import logging 
 
+logger = logging.getLogger(__name__)
 async def ct_log(target: str) -> AsyncGenerator[str, None]:
     headers = {
         "User-Agent": "Mozilla/5.0",
         "Accept": "application/json"
     }
-
+    logger.info("\n\n\n\n---------------------------Stealing from CT LOGS----------------------------------")
     timeout = httpx.Timeout(40.0, connect=25.0)  # increase total and connect timeouts
 
     async with httpx.AsyncClient(timeout=timeout) as client:
@@ -27,6 +29,7 @@ async def ct_log(target: str) -> AsyncGenerator[str, None]:
 
         try:
             for entry in resp.json():
+                logger.info(f"\n\n  [CT_LOG]: {entry}")
                 yield entry["name_value"]
         except Exception as e:
             print("[X] JSON parse failed")

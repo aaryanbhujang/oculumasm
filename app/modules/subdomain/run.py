@@ -1,5 +1,3 @@
-# app/modules/subdomain/run.py
-
 from typing import AsyncGenerator, Union
 from app.modules.subdomain.passive.enumerate_passive import pass_enum
 from app.modules.subdomain.active.enumerate_active import act_enum
@@ -15,24 +13,26 @@ async def run(domain: str) -> AsyncGenerator[Union[str, dict], None]:
       - dict: {'stage': 'done', 'result': <plain dict>}
     """
     result = SubdomainResult(domain=domain, subdomains=[])
+    seen = set()
 
     # 1) Passive enumeration: tell client we're starting
     yield {"stage": "passive-start"}
 
     # stream each passive subdomain
     async for sub in pass_enum(domain):
-        if "@" not in sub:      # must be AsyncGenerator[str, None]
+        if "@" not in sub and sub not in seen:      # must be AsyncGenerator[str, None]
+            seen.add(sub)
             result.subdomains.append(sub)
             yield sub
-        else:
-            yield ""
 
     # 2) Active enumeration
     yield {"stage": "active-start"}
 
     async for sub in act_enum(domain):       # must be AsyncGenerator[str, None]
-        result.subdomains.append(sub)
-        yield sub
+        if sub not in seen:
+            seen.add(sub)
+            result.subdomains.append(sub)
+            yield sub
 
     # 3) Done: hand back the full result as a plain dict
     yield {
