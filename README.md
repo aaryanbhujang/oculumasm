@@ -23,24 +23,9 @@ The tool supports modular integration of recon utilities with a task-based workf
 
 ---
 
-## 🧱 Architecture
-
-The system architecture follows an asynchronous pipeline:
-
-1. User initiates a scan via a REST API.  
-2. Flask API normalizes and validates input.  
-3. A task workflow is constructed dynamically based on available modules.  
-4. Celery processes the task chain.  
-5. MongoDB stores results.  
-6. User polls the API for real-time progress or results.
-
-All services are containerized using Docker and orchestrated via `docker-compose`.
-
----
-
 ## 🔧 Features
 
-- Subdomain Enumeration (via `assetfinder`, `subfinder`, etc.)  
+- Subdomain Enumeration (via `assetfinder`, `subfinder`, etc.)  (Available)
 - Wayback URL collection & Spidering  
 - HTTP Probing (live detection)  
 - Port Scanning (optional)  
